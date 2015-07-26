@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+  <title>Consumer Contracts</title>
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/github.min.css">
+  <link rel="stylesheet" href="main.css">
+  <script src="//use.typekit.net/gtv6oud.js"></script>
+  <script>try{Typekit.load();}catch(e){}</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+  <header class="row center">
+    <img src="logo.svg" alt="Consumer Contracts" width="560">
+  </header>
+  <section class="row row--dark-blue">
+    <div class="container">
+      <p><a href="http://martinfowler.com/articles/consumerDrivenContracts.html">Consumer-driven contracts</a> let you move fast <em>without breaking things</em>.</p>
+      <p>API consumers codify their expections of your service in an executable contract. This defines the type of response that they expect for a given request. Contracts give you an insight into which parts of your API clients depend on, and which parts can be changed without fear of breaking them.</p>
+      <p>This project lets you write executable contracts in JavaScript. It uses <a href="https://github.com/request/request">request</a> to make HTTP requests and <a href="https://github.com/hapijs/joi">Joi</a> to validate API responses. Contracts are defined as JavaScript modules in a contracts directory at the root of your project and can be executed using the <code>consumer-contracts</code> tool.</p>
+    </div>
+  </section>
+  <section class="row">
+    <div class="container">
+      <h2 id="getting-started">Getting started</h2>
+      <p>Install the consumer-contracts tool globally:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">npm install --global consumer-contracts</code></pre>
+      </div>
+      <p>Install the consumer-contracts module locally (this gives you access to the contract definition interface in your contract files):</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">npm install --save consumer-contracts</code></pre>
+      </div>
+      <p>Create a contracts directory at the root of your project:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">mkdir contracts</code></pre>
+      </div>
+      <p>Create a JavaScript file within the <code>contracts</code> directory for your first contract. The example below is a contract for the GitHub User API, we'll call it <code>user-api.js</code>. In this example, the consumer depends on the <code>login</code>, <code>name</code> and <code>public_repos</code> properties returned in the response body.</p>
+      <div class="code-block">
+        <pre><code>var Contract = require('consumer-contracts').Contract;
+var Joi = require('consumer-contracts').Joi;
+
+module.exports = new Contract({
+  name: 'User API',
+  consumer: 'My GitHub Service',
+  request: {
+    method: 'GET',
+    url: 'https://api.github.com/users/robinjmurphy'
+  },
+  response: {
+    statusCode: 200,
+    body: Joi.object().keys({
+      login: Joi.string(),
+      name: Joi.string(),
+      public_repos: Joi.number().integer()
+    })
+  }
+});</code></pre>
+      </div>
+      <p>To validate the contract, run the following command at the root of your project directory:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">consumer-contracts run</code></pre>
+      </div>
+      <p>You should see that the contract validates:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">✓ My GitHub Service – User API
+
+
+1 passing</code></pre>
+      </div>
+    </div>
+  </section>
+  <section class="row">
+    <div class="container">
+      <h2 id="anatomy-of-a-contract">Anatomy of a contract</h2>
+      <p>Each contract contains four properties; <code>consumer</code>, <code>name</code>, <code>request</code> and <code>response</code>.</p>
+      <div class="code-block">
+        <pre><code class="js">var Contract = require('consumer-contracts').Contract;
+var Joi = require('consumer-contracts').Joi;
+
+module.exports = new Contract({
+  name: 'Contract name',
+  consumer: 'Consumer name',
+  request: {
+    // ...
+  },
+  response: {
+    // ...
+  }
+});</code></pre>
+      </div>
+      <h3 id="consumer"><code>consumer</code></h3>
+      <p>The <code>consumer</code> property appears in the output of the <code>consumer-contracts</code> tool and should be the name of the consuming service that the contract applies to.</p>
+      <h3 id="name"><code>name</code></h3>
+      <p>The <code>name</code> property appears in the output of the <code>consumer-contracts</code> tool and helps you identfiy each individual contract.</p>
+      <h3 id="request"><code>request</code></h3>
+      <p>The <code>request</code> property defines the HTTP request that the contract applies to. All of the <a href="https://github.com/request/request#requestoptions-callback">options supported by request</a> are valid. This means you can specify headers and SSL configuration options (among other things) for a given request:</p>
+      <div class="code-block">
+        <pre><code class="js">request: {
+  method: 'GET',
+  url: 'https://exmaple.com/users/fred',
+  headers: {
+    Accept: 'text/xml'
+  },
+  cert: fs.readFileSync('/path/to/my/cert.crt'),
+  key: fs.readFileSync('/path/to/my/cert.key')
+}</code></pre>
+      </div>
+      <h3 id="response"><code>response</code></h3>
+      <p>The <code>response</code> object validates the response returned by your service. The entire object is treated as a <a href="https://github.com/hapijs/joi">Joi</a> schema that validates the <code>res</code> object returned by <code>request</code>. This means that the response's status code, headers and JSON body can all be validated using Joi's flexible schema language. The following options are passed to Joi's <a href="https://github.com/hapijs/joi#validatevalue-schema-options-callback"><code>validate()</code></a> function:</p>
+      <div class="code-block">
+        <pre><code class="js">{
+  allowUnknown: true,
+  presence: 'required'
+}</code></pre>
+      </div>
+      <h4>Validating the response code</h4>
+      <p>To require a specific HTTP status code, set the <code>statusCode</code> property to that value:</p>
+      <div class="code-block">
+        <pre><code class="js">response: {
+  statusCode: 200
+}</code></pre>
+      </div>
+      <p>To allow a range of different status codes, you can use Joi's <a href="https://github.com/hapijs/joi#anyvalidvalue---aliases-only-equal"><code>valid()</code></a> function:</p>
+      <div class="code-block">
+        <pre><code class="js">response: {
+  statusCode: Joi.any().valid(200, 201, 202)
+}</code></pre>
+      </div>
+      <h4>Validating the response headers</h4>
+      <p>The response headers can be validated using a Joi schema:</p>
+      <div class="code-block">
+        <pre><code class="js">response: {
+  headers: Joi.object().keys({
+    'Location': Joi.string().regex(/\/users\/\d+/),
+    'Content-Type': 'application/json'
+  })
+}</code></pre>
+      </div>
+      <h4>Validating the response body</h4>
+      <p>The response body can be validated using a Joi schema:</p>
+      <div class="code-block">
+        <pre><code class="js">response: {
+  body: Joi.object().keys({
+    name: Joi.string(),
+    items: Joi.array().items(Joi.object().keys({
+      id: Joi.number.integer()
+    }))
+  })
+}</code></pre>
+      </div>
+      <h3 id="client"><code>client</code> <em>optional</em></h3>
+      <p>You can use a pre-configured <a href="https://github.com/request/request">request</a> client for your contracts using the <code>client</code> property. This can be useful when you have a set of common request options across contracts.</p>
+      <div class="code-block">
+        <pre><code>var Contract = require('consumer-contracts').Contract;
+var Joi = require('consumer-contracts').Joi;
+var client = require('request').defaults({
+  headers: {
+    authorization: 'Bearer xxx'
+  }
+});
+
+module.exports = new Contract({
+  name: 'Contract name',
+  consumer: 'Consumer name',
+  request: {
+    // ...
+  },
+  response: {
+    // ...
+  },
+  client: client
+});</code></pre>
+      </div>
+    </div>
+  </section>
+  <section class="row row--blue">
+    <div class="container">
+      <h2 id="cli">CLI</h2>
+      <h3 id="run"><code>run</code></h3>
+      <p>To validate all of the contracts in the <code>contracts</code> directory, type:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">consumer-contracts run</code></pre>
+      </div>
+      <p>This works recursively, which means you can keep the contracts for each of your consumers in a separate subdirectory.</p>
+      <p>To run a single contract, pass a filename to the <code>run</code> command:</p>
+      <div class="code-block">
+        <pre><code class="nohighlight">consumer-contracts run ./contracts/consumer-a/contract-1.js</code></pre>
+      </div>
+    </div>
+  </section>
+  <footer class="row center small">
+    <div class="container">
+      <p>Contribute to the project on <a href="https://github.com/robinjmurphy/consumer-contracts">Github</a> &middot; Install the latest version using <a href="https://www.npmjs.com/package/consumer-contracts">npm</a></p>
+    </div>
+  </footer>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/anchor-js/1.2.1/anchor.min.js"></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/highlight.min.js"></script>
+  <script>anchors.add();</script>
+  <script>hljs.initHighlightingOnLoad();</script>
+</body>
+</html>
