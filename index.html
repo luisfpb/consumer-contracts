@@ -173,7 +173,7 @@ module.exports = new Contract({
   client: client
 });</code></pre>
       </div>
-      <h3 id="client"><code>before</code> <em>optional</em></h3>
+      <h3 id="before"><code>before</code> <em>optional</em></h3>
       <p>If your contract requires some setup (e.g. populating an API with data) you can use the before property. It takes a function that will be run before the contract executes. The setup function receives a callback argument that you should call once your setup is complete.</p>
       <div class="code-block">
         <pre><code>module.exports = new Contract({
@@ -191,7 +191,26 @@ module.exports = new Contract({
   }
 });</code></pre>
       </div>
+      <h3 id="after"><code>after</code> <em>optional</em></h3>
+      <p>If your contract requires some cleanup then you can use the after property. It takes a function that will be run after the contract executes. The after function receives a callback argument that you should call once your cleanup is complete.</p>
+      <div class="code-block">
+        <pre><code>module.exports = new Contract({
+  name: 'Contract name',
+  consumer: 'Consumer name',
+  request: {
+    // ...
+  },
+  response: {
+    // ...
+  },
+  after: function (done) {
+    // cleanup
+    done();
+  }
+});</code></pre>
+      </div>
     </div>
+  </div>
   </section>
   <section class="row row--blue">
     <div class="container">
