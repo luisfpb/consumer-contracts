@@ -115,6 +115,7 @@ module.exports = new Contract({
 }</code></pre>
       </div>
       <p>This means that any fields you choose to validate are <em>required</em> by default. To indicate that a field is optional, use the <a href="https://github.com/hapijs/joi#anyoptional"><code>optional()</code></a> modifier.</p>
+      <p>If you need to override the default Joi options, you can use the optional <code>joiOptions</code> property in your contract.</p>
       <h4>Validating the response code</h4>
       <p>To require a specific HTTP status code, set the <code>statusCode</code> property to that value:</p>
       <div class="code-block">
@@ -206,6 +207,23 @@ module.exports = new Contract({
   after: function (done) {
     // cleanup
     done();
+  }
+});</code></pre>
+      </div>
+      <h3 id="joi-options"><code>joiOptions</code> <em>optional</em></h3>
+      <p>Overrides the default Joi validation options.</p>
+      <div class="code-block">
+        <pre><code>module.exports = new Contract({
+  name: 'Contract name',
+  consumer: 'Consumer name',
+  request: {
+    // ...
+  },
+  response: {
+    // ...
+  },
+  joiOptions: {
+    allowUnknown: false
   }
 });</code></pre>
       </div>
